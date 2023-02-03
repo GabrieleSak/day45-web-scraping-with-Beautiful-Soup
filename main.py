@@ -1,34 +1,33 @@
 from bs4 import BeautifulSoup
+import requests
 
-# import lxml
+response = requests.get("https://news.ycombinator.com/")
 
-with open('website.html', encoding='utf8') as f:
-    contents = f.read()
+yc_web_page = response.text
 
-soup = BeautifulSoup(contents, 'html.parser')
+soup = BeautifulSoup(yc_web_page, "html.parser")
 
-# print(soup.title)
-# print(soup.title.string)
-#
-# print(soup.prettify())
+articles = soup.find_all(name="span", class_='titleline')
+article_texts = []
+article_links = []
 
-all_anchor_tags = soup.find_all(name="a")
-# print(all_anchor_tags)
+for article_tag in articles:
+    text = article_tag.contents[0].getText()
+    article_texts.append(text)
+    link = article_tag.contents[0].get('href')
+    article_links.append(link)
 
-# for tag in all_anchor_tags:
-#     # print(tag.getText())
-#     print(tag.get("href"))
+article_upvotes = []
 
-heading = soup.find(name="h1", id="name")
-# print(heading)
+for td in soup.find_all(name="td", class_='subtext'):
+    score = td.find(name="span", class_='score')
+    if score:
+        score = int(score.getText().split()[0])
+    else:
+        score = 0
+    article_upvotes.append(score)
 
+highest_upvote_no = article_upvotes.index(max(article_upvotes))
 
-section_heading = soup.find(name="h3", class_="heading")
-# print(section_heading.get("class"))
-
-
-company_url = soup.select_one(selector="p a")
-# print(company_url)
-
-headings = soup.select(".heading")
-print(headings)
+print(f"Highest number of upvotes: {article_upvotes[highest_upvote_no]}\nTitle: {article_texts[highest_upvote_no]}\n"
+      f"Url: {article_links[highest_upvote_no]}")
